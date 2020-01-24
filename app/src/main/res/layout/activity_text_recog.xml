@@ -34,13 +34,15 @@
         </RelativeLayout>
     </ScrollView>
 
-
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/saveButton"
+        android:layout_margin="8dp"
         android:id="@+id/saveDetails"
-        android:textColor="@color/colorOfText"
+        android:textColor="@color/tv_color_grey6"
+        android:background="@color/btn_background"
+        style="@style/btn_style"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="4dp" />
     <ProgressBar
