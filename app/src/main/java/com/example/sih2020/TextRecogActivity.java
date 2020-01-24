@@ -66,7 +66,7 @@ public class TextRecogActivity extends AppCompatActivity {
 
         saveDetails = findViewById(R.id.saveDetails);
         CropImage.activity().setGuidelines(CropImageView.Guidelines.ON)
-                .start(this);
+                .start(TextRecogActivity.this);
 
 
         saveDetails.setOnClickListener(new View.OnClickListener() {

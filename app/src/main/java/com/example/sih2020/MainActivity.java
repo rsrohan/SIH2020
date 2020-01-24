@@ -23,14 +23,28 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.anychart.AnyChart;
+import com.anychart.AnyChartView;
+import com.anychart.chart.common.dataentry.DataEntry;
+import com.anychart.chart.common.dataentry.ValueDataEntry;
+import com.anychart.charts.Cartesian;
+import com.anychart.core.cartesian.series.Column;
+import com.anychart.enums.Anchor;
+import com.anychart.enums.HoverMode;
+import com.anychart.enums.Position;
+import com.anychart.enums.TooltipPositionMode;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import ai.api.AIDataService;
 import ai.api.AIListener;
@@ -53,6 +67,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     Button capture, analyze;
 
     private AIService aiService;
+    private AnyChartView anyChartView;
+
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         sendBtn = findViewById(R.id.sendBtn);
         capture = findViewById(R.id.capture);
         analyze = findViewById(R.id.analyze);
+        progressBar = findViewById(R.id.progressBar);
+        anyChartView = findViewById(R.id.anychartview);
         user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -239,6 +258,46 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         analyze.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                anyChartView.setVisibility(View.VISIBLE);
+                progressBar.setVisibility(View.VISIBLE);
+                anyChartView.setProgressBar(progressBar);
+
+
+                Cartesian cartesian = AnyChart.column();
+
+                List<DataEntry> data = new ArrayList<>();
+                data.add(new ValueDataEntry("NIACIN", 3));
+                data.add(new ValueDataEntry("REDUCED IRON", 3));
+                data.add(new ValueDataEntry("SUGAR", 4));
+                data.add(new ValueDataEntry("NIACIN, REDUCED IRON", 2));
+                data.add(new ValueDataEntry("NIACIN, SUGAR", 3));
+                data.add(new ValueDataEntry("REDUCED IRON, SUGAR", 1));
+                data.add(new ValueDataEntry("NIACIN, REDUCED IRON, SUGAR", 3));
+
+
+                Column column = cartesian.column(data);
+                column.tooltip()
+                        .titleFormat("{%X}")
+                        .position(Position.CENTER_BOTTOM)
+                        .anchor(Anchor.CENTER_BOTTOM)
+                        .offsetX(0d)
+                        .offsetY(5d)
+                        .format("number of intakes: {%Value}{groupsSeparator: }");
+
+                cartesian.animation(true);
+                cartesian.title("INGREDIENTS CONSUMED BY YOU DURING THIS ALLERGY PERIOD.");
+
+                cartesian.yScale().minimum(0d);
+
+                cartesian.yAxis(0).labels().format("{%Value}{groupsSeparator: }");
+
+                cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+                cartesian.interactivity().hoverMode(HoverMode.BY_X);
+
+                cartesian.xAxis(0).title("INGREDIENT");
+                cartesian.yAxis(0).title("FREQUENCY");
+
+                anyChartView.setChart(cartesian);
 
             }
         });
@@ -323,6 +382,12 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
     }
 
-
+    @Override
+    public void onBackPressed() {
+        try {
+            anyChartView.setVisibility(View.GONE);
+        } catch (Exception e) {
+        }
+    }
 }
 
