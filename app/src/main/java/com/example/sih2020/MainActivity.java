@@ -19,10 +19,12 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
@@ -45,9 +47,10 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     EditText messageBox;
     ImageView sendBtn;
     DatabaseReference ref;
-    FirebaseRecyclerAdapter<ChatMessage,chat_rec> adapter;
+    FirebaseRecyclerAdapter<ChatMessage, chat_rec> adapter;
     Boolean flagFab = true;
     FirebaseUser user;
+    Button capture, analyze;
 
     private AIService aiService;
 
@@ -55,13 +58,14 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO},1);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
         recyclerView = findViewById(R.id.recyclerView);
         messageBox = findViewById(R.id.messageBox);
         sendBtn = findViewById(R.id.sendBtn);
-        user= FirebaseAuth.getInstance().getCurrentUser();
-        if (user==null)
-        {
+        capture = findViewById(R.id.capture);
+        analyze = findViewById(R.id.analyze);
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
@@ -84,8 +88,24 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
         final AIRequest aiRequest = new AIRequest();
 
+        String s = getIntent().getStringExtra("ingredients details");
 
+        if (s != null) {
+            try {
+                s = s.replace(", ", "\n");
+                s = s.toUpperCase();
+                try {
+                    s = s.substring(s.indexOf("INGRE"));
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), "" + e, Toast.LENGTH_SHORT).show();
+                }
+                messageBox.setText(s);
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), "" + e, Toast.LENGTH_SHORT).show();
+                messageBox.setText(s);
+            }
 
+        }
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -98,11 +118,10 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     ChatMessage chatMessage = new ChatMessage(message, "user");
                     ref.child("chat").push().setValue(chatMessage);
 
-                    String s= messageBox.getText().toString().toLowerCase();
-                    try{
+                    try {
 
                         aiRequest.setQuery(message);
-                        new AsyncTask<AIRequest,Void, AIResponse>(){
+                        new AsyncTask<AIRequest, Void, AIResponse>() {
 
                             @Override
                             protected AIResponse doInBackground(AIRequest... aiRequests) {
@@ -114,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                                 }
                                 return null;
                             }
+
                             @Override
                             protected void onPostExecute(AIResponse response) {
                                 if (response != null) {
@@ -125,8 +145,9 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                                 }
                             }
                         }.execute(aiRequest);
-                    }catch (Exception e){}}
-                else {
+                    } catch (Exception e) {
+                    }
+                } else {
                     aiService.startListening();
                 }
 
@@ -134,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
             }
         });
-
 
 
         messageBox.addTextChangedListener(new TextWatcher() {
@@ -148,15 +168,13 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                 ImageView fab_img = findViewById(R.id.sendBtn);
 
 
+                if (s.toString().trim().length() != 0 && flagFab) {
+                    ImageViewAnimatedChange(MainActivity.this, fab_img, getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                    flagFab = false;
 
-                if (s.toString().trim().length()!=0 && flagFab){
-                    ImageViewAnimatedChange(MainActivity.this,fab_img,getResources().getDrawable(R.drawable.ic_send_black_24dp));
-                    flagFab=false;
-
-                }
-                else if (s.toString().trim().length()==0){
-                    ImageViewAnimatedChange(MainActivity.this,fab_img,getResources().getDrawable(R.drawable.ic_mic_black_24dp));
-                    flagFab=true;
+                } else if (s.toString().trim().length() == 0) {
+                    ImageViewAnimatedChange(MainActivity.this, fab_img, getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                    flagFab = true;
 
                 }
 
@@ -169,9 +187,8 @@ public class MainActivity extends AppCompatActivity implements AIListener {
             }
         });
 
-        adapter = new FirebaseRecyclerAdapter<ChatMessage, chat_rec>(ChatMessage.class,R.layout.msglist,chat_rec.class,ref.child("chat")) {
+        adapter = new FirebaseRecyclerAdapter<ChatMessage, chat_rec>(ChatMessage.class, R.layout.msglist, chat_rec.class, ref.child("chat")) {
             @NonNull
-
 
 
             @Override
@@ -182,15 +199,12 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     viewHolder.rightText.setText(model.getMsgText());
                     viewHolder.rightText.setVisibility(View.VISIBLE);
                     viewHolder.leftText.setVisibility(View.GONE);
-                }
-                else {
+                } else {
                     viewHolder.leftText.setText(model.getMsgText());
                     viewHolder.rightText.setVisibility(View.GONE);
                     viewHolder.leftText.setVisibility(View.VISIBLE);
                 }
             }
-
-
 
 
         };
@@ -215,9 +229,21 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
         recyclerView.setAdapter(adapter);
 
+        capture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getApplicationContext(), TextRecogActivity.class));
+                finish();
+            }
+        });
+        analyze.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
     }
-
 
 
     @Override
@@ -244,26 +270,41 @@ public class MainActivity extends AppCompatActivity implements AIListener {
     public void onListeningFinished() {
 
     }
+
     public void ImageViewAnimatedChange(Context c, final ImageView v, final Drawable new_image) {
         final Animation anim_out = AnimationUtils.loadAnimation(c, R.anim.zoom_out);
-        final Animation anim_in  = AnimationUtils.loadAnimation(c, R.anim.zoom_in);
-        anim_out.setAnimationListener(new Animation.AnimationListener()
-        {
-            @Override public void onAnimationStart(Animation animation) {}
-            @Override public void onAnimationRepeat(Animation animation) {}
-            @Override public void onAnimationEnd(Animation animation)
-            {
+        final Animation anim_in = AnimationUtils.loadAnimation(c, R.anim.zoom_in);
+        anim_out.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
                 v.setImageDrawable(new_image);
                 anim_in.setAnimationListener(new Animation.AnimationListener() {
-                    @Override public void onAnimationStart(Animation animation) {}
-                    @Override public void onAnimationRepeat(Animation animation) {}
-                    @Override public void onAnimationEnd(Animation animation) {}
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                    }
                 });
                 v.startAnimation(anim_in);
             }
         });
         v.startAnimation(anim_out);
     }
+
     @Override
     public void onResult(ai.api.model.AIResponse response) {
 
@@ -281,8 +322,6 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
 
     }
-
-
 
 
 }
