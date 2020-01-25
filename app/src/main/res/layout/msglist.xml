@@ -16,7 +16,7 @@
         android:layout_marginBottom="4dp"
         android:background="@color/tv_color_grey6"
         android:elevation="6dp"
-        app:cardCornerRadius="6dp"
+        app:cardCornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -43,7 +43,7 @@
         android:layout_marginBottom="4dp"
         android:background="@color/tv_color_grey6"
         android:elevation="6dp"
-        app:cardCornerRadius="6dp"
+        app:cardCornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
