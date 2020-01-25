@@ -354,15 +354,16 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
                     //conn.connect();
 
-                    conn.setRequestProperty("Content-Type", "application/json");
-                    conn.setRequestProperty("Accept", "application/json");
-                    conn.setDoOutput(true);
-                    conn.setDoInput(true);
+//                    conn.setRequestProperty("Content-Type", "application/json");
+//                    conn.setRequestProperty("Accept", "application/json");
+//                    conn.setDoOutput(true);
+//                    conn.setDoInput(true);
 
 
 
 
                     final Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                    Log.d(TAG, "run: "+in);
                     StringBuilder sb = new StringBuilder();
                     for (int c; (c = in.read()) >= 0; )
                         sb.append((char) c);
@@ -380,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     JSONArray array2 = jsonObject.getJSONArray("freq");
 
                     for (int i = 0; i < array.length(); i++) {
-                        graphData.add(new ValueDataEntry(array.getJSONObject(i).toString(), Integer.parseInt(array2.getJSONObject(i).toString())));
+                        graphData.add(new ValueDataEntry(array.getString(i), Integer.parseInt(array2.getString(i))));
                     }
                     Column column = cartesian.column(graphData);
                     column.tooltip()
@@ -404,7 +405,16 @@ public class MainActivity extends AppCompatActivity implements AIListener {
                     cartesian.xAxis(0).title("INGREDIENT");
                     cartesian.yAxis(0).title("FREQUENCY");
 
-                    anyChartView.setChart(cartesian);
+                    Cartesian cartesian1 = AnyChart.column();
+                    cartesian1 = cartesian;
+                    final Cartesian finalCartesian = cartesian1;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            anyChartView.setChart(finalCartesian);
+
+                        }
+                    });
                     Log.d(TAG, "run: " + jsonObject);
 
                     conn.disconnect();
