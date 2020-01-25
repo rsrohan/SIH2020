@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -56,6 +57,7 @@ public class TextRecogActivity extends AppCompatActivity {
         setContentView(R.layout.activity_text_recog);
         imageView = findViewById(R.id.croppedImage);
         textView = findViewById(R.id.textView);
+        textView.setMovementMethod(new ScrollingMovementMethod());
         mUser = FirebaseAuth.getInstance().getCurrentUser();
         assert mUser != null;
         uid = mUser.getEmail();

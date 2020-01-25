@@ -6,6 +6,21 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textViewStyle">@style/MontserratTextView</item>
     </style>
 
+    <style name="MontserratTextView" parent="android:Widget.TextView">
+        <item name="android:fontFamily">@font/montserrat</item>
+    </style>
+
+    <style name="main_edittext" parent="MontserratTextView">
+    <item name="android:background">@drawable/et_background</item>
+    <item name="android:paddingStart">10dp</item>
+    <item name="android:paddingEnd">10dp</item>
+    </style>
+
+    <style name="btn_style" parent="MontserratTextView">
+        <item name="android:background">@drawable/button_rectangular</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
 </resources>

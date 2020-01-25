@@ -1,0 +1,6 @@
+<shape android:shape="rectangle"
+    android:padding="10dp"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/btn_background"/>
+    <corners android:radius="16dp" />
+</shape>
