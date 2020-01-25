@@ -46,16 +46,22 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.JsonArray;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import ai.api.AIDataService;
 import ai.api.AIListener;
@@ -271,55 +277,55 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         analyze.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                try {
-//                    String userName = user.getEmail();
-//                    assert userName != null;
-//                    userName = userName.substring(0, userName.indexOf("@"));
-//                    setThreadForApiCalling(userName);
+                try {
+                    String userName = user.getEmail();
+                    assert userName != null;
+                    userName = userName.substring(0, userName.indexOf("@"));
+                    setThreadForApiCalling(userName);
+
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, ""+e, Toast.LENGTH_SHORT).show();
+                }
+//                anyChartView.setVisibility(View.VISIBLE);
+//                progressBar.setVisibility(View.VISIBLE);
+//                anyChartView.setProgressBar(progressBar);
 //
-//                } catch (Exception e) {
-//                    Toast.makeText(MainActivity.this, ""+e, Toast.LENGTH_SHORT).show();
-//                }
-                anyChartView.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.VISIBLE);
-                anyChartView.setProgressBar(progressBar);
-
-
-                Cartesian cartesian = AnyChart.column();
-
-                List<DataEntry> data = new ArrayList<>();
-                data.add(new ValueDataEntry("NIACIN", 3));
-                data.add(new ValueDataEntry("REDUCED IRON", 3));
-                data.add(new ValueDataEntry("SUGAR", 4));
-                data.add(new ValueDataEntry("NIACIN, REDUCED IRON", 2));
-                data.add(new ValueDataEntry("NIACIN, SUGAR", 3));
-                data.add(new ValueDataEntry("REDUCED IRON, SUGAR", 1));
-                data.add(new ValueDataEntry("NIACIN, REDUCED IRON, SUGAR", 3));
-
-
-                Column column = cartesian.column(data);
-                column.tooltip()
-                        .titleFormat("{%X}")
-                        .position(Position.CENTER_BOTTOM)
-                        .anchor(Anchor.CENTER_BOTTOM)
-                        .offsetX(0d)
-                        .offsetY(5d)
-                        .format("number of intakes: {%Value}{groupsSeparator: }");
-
-                cartesian.animation(true);
-                cartesian.title("INGREDIENTS CONSUMED BY YOU DURING THIS ALLERGY PERIOD.");
-
-                cartesian.yScale().minimum(0d);
-
-                cartesian.yAxis(0).labels().format("{%Value}{groupsSeparator: }");
-
-                cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
-                cartesian.interactivity().hoverMode(HoverMode.BY_X);
-
-                cartesian.xAxis(0).title("INGREDIENT");
-                cartesian.yAxis(0).title("FREQUENCY");
-
-                anyChartView.setChart(cartesian);
+//
+//                Cartesian cartesian = AnyChart.column();
+//
+//                List<DataEntry> data = new ArrayList<>();
+//                data.add(new ValueDataEntry("NIACIN", 3));
+//                data.add(new ValueDataEntry("REDUCED IRON", 3));
+//                data.add(new ValueDataEntry("SUGAR", 4));
+//                data.add(new ValueDataEntry("NIACIN, REDUCED IRON", 2));
+//                data.add(new ValueDataEntry("NIACIN, SUGAR", 3));
+//                data.add(new ValueDataEntry("REDUCED IRON, SUGAR", 1));
+//                data.add(new ValueDataEntry("NIACIN, REDUCED IRON, SUGAR", 3));
+//
+//
+//                Column column = cartesian.column(data);
+//                column.tooltip()
+//                        .titleFormat("{%X}")
+//                        .position(Position.CENTER_BOTTOM)
+//                        .anchor(Anchor.CENTER_BOTTOM)
+//                        .offsetX(0d)
+//                        .offsetY(5d)
+//                        .format("number of intakes: {%Value}{groupsSeparator: }");
+//
+//                cartesian.animation(true);
+//                cartesian.title("INGREDIENTS CONSUMED BY YOU DURING THIS ALLERGY PERIOD.");
+//
+//                cartesian.yScale().minimum(0d);
+//
+//                cartesian.yAxis(0).labels().format("{%Value}{groupsSeparator: }");
+//
+//                cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+//                cartesian.interactivity().hoverMode(HoverMode.BY_X);
+//
+//                cartesian.xAxis(0).title("INGREDIENT");
+//                cartesian.yAxis(0).title("FREQUENCY");
+//
+//                anyChartView.setChart(cartesian);
 
             }
         });
@@ -334,35 +340,36 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         final String urlAdress = "https://fathomless-oasis-99930.herokuapp.com/rsrohanverma/return_json";
 
 
-        final JSONObject data = new JSONObject();
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    //JSONObject data = new JSONObject();
+
 
                     URL url = new URL(urlAdress);
                     Log.d(TAG, "run: " + urlAdress);
                     final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("POST");
+                    conn.setRequestMethod("GET");
+
+                    //conn.connect();
+
                     conn.setRequestProperty("Content-Type", "application/json");
                     conn.setRequestProperty("Accept", "application/json");
                     conn.setDoOutput(true);
                     conn.setDoInput(true);
 
-                    Log.d(TAG, "run: " + data.toString());
-                    DataOutputStream os = new DataOutputStream(conn.getOutputStream());
-                    os.writeBytes(data.toString());
-                    os.flush();
-                    os.close();
 
-                    final Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+
+
+                    final Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
                     StringBuilder sb = new StringBuilder();
                     for (int c; (c = in.read()) >= 0; )
                         sb.append((char) c);
                     final String response = sb.toString();
 
-                    Log.i("STATUS", String.valueOf(conn.getResponseCode()));
-                    Log.i("MSG123", response);
+                    //Log.d(TAG, "run: STATUS" + String.valueOf(conn.getResponseCode()));
+                    Log.d("MSG123", response);
 
                     Cartesian cartesian = AnyChart.column();
 
@@ -500,5 +507,6 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         } catch (Exception e) {
         }
     }
+
 }
 
