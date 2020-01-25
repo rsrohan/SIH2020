@@ -16,6 +16,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -42,7 +43,17 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.gson.JsonArray;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,6 +66,8 @@ import ai.api.model.AIError;
 import ai.api.model.AIRequest;
 import ai.api.model.AIResponse;
 import ai.api.model.Result;
+
+import static androidx.constraintlayout.widget.Constraints.TAG;
 
 public class MainActivity extends AppCompatActivity implements AIListener {
     RecyclerView recyclerView;
@@ -258,6 +271,15 @@ public class MainActivity extends AppCompatActivity implements AIListener {
         analyze.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+//                try {
+//                    String userName = user.getEmail();
+//                    assert userName != null;
+//                    userName = userName.substring(0, userName.indexOf("@"));
+//                    setThreadForApiCalling(userName);
+//
+//                } catch (Exception e) {
+//                    Toast.makeText(MainActivity.this, ""+e, Toast.LENGTH_SHORT).show();
+//                }
                 anyChartView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
                 anyChartView.setProgressBar(progressBar);
@@ -301,6 +323,95 @@ public class MainActivity extends AppCompatActivity implements AIListener {
 
             }
         });
+
+    }
+
+    private void setThreadForApiCalling(String user) {
+        anyChartView.setVisibility(View.VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
+        anyChartView.setProgressBar(progressBar);
+
+        final String urlAdress = "https://fathomless-oasis-99930.herokuapp.com/rsrohanverma/return_json";
+
+
+        final JSONObject data = new JSONObject();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    URL url = new URL(urlAdress);
+                    Log.d(TAG, "run: " + urlAdress);
+                    final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setDoOutput(true);
+                    conn.setDoInput(true);
+
+                    Log.d(TAG, "run: " + data.toString());
+                    DataOutputStream os = new DataOutputStream(conn.getOutputStream());
+                    os.writeBytes(data.toString());
+                    os.flush();
+                    os.close();
+
+                    final Reader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                    StringBuilder sb = new StringBuilder();
+                    for (int c; (c = in.read()) >= 0; )
+                        sb.append((char) c);
+                    final String response = sb.toString();
+
+                    Log.i("STATUS", String.valueOf(conn.getResponseCode()));
+                    Log.i("MSG123", response);
+
+                    Cartesian cartesian = AnyChart.column();
+
+                    final JSONObject jsonObject = new JSONObject(response);
+
+                    List<DataEntry> graphData = new ArrayList<>();
+                    JSONArray array = jsonObject.getJSONArray("items");
+                    JSONArray array2 = jsonObject.getJSONArray("freq");
+
+                    for (int i = 0; i < array.length(); i++) {
+                        graphData.add(new ValueDataEntry(array.getJSONObject(i).toString(), Integer.parseInt(array2.getJSONObject(i).toString())));
+                    }
+                    Column column = cartesian.column(graphData);
+                    column.tooltip()
+                            .titleFormat("{%X}")
+                            .position(Position.CENTER_BOTTOM)
+                            .anchor(Anchor.CENTER_BOTTOM)
+                            .offsetX(0d)
+                            .offsetY(5d)
+                            .format("number of intakes: {%Value}{groupsSeparator: }");
+
+                    cartesian.animation(true);
+                    cartesian.title("INGREDIENTS CONSUMED BY YOU DURING THIS ALLERGY PERIOD.");
+
+                    cartesian.yScale().minimum(0d);
+
+                    cartesian.yAxis(0).labels().format("{%Value}{groupsSeparator: }");
+
+                    cartesian.tooltip().positionMode(TooltipPositionMode.POINT);
+                    cartesian.interactivity().hoverMode(HoverMode.BY_X);
+
+                    cartesian.xAxis(0).title("INGREDIENT");
+                    cartesian.yAxis(0).title("FREQUENCY");
+
+                    anyChartView.setChart(cartesian);
+                    Log.d(TAG, "run: " + jsonObject);
+
+                    conn.disconnect();
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                    Log.d(TAG, "run: "+e);
+
+                }
+
+
+            }
+        });
+
+        thread.start();
 
     }
 
